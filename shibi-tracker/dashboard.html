@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard // SHIBI.OS</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Orbitron:wght@500;700;900&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body class="dashboard-page">
+
+  <!-- Matrix bg + particles -->
+  <canvas id="matrix-bg"></canvas>
+  <div class="particles" id="particles"></div>
+
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <span class="brand-logo">&lt;/&gt;</span>
+      <span class="brand-text">SHIBI<span class="brand-dot">.</span>OS</span>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a href="#section-home"      class="nav-link active" data-section="section-home"><i class="bi bi-grid-1x2-fill"></i><span>Overview</span></a>
+      <a href="#section-java"      class="nav-link" data-section="section-java"><i class="bi bi-cup-hot-fill"></i><span>Java</span></a>
+      <a href="#section-dsa"       class="nav-link" data-section="section-dsa"><i class="bi bi-diagram-3-fill"></i><span>DSA</span></a>
+      <a href="#section-cyber"     class="nav-link" data-section="section-cyber"><i class="bi bi-shield-lock-fill"></i><span>Cybersec</span></a>
+      <a href="#section-aptitude"  class="nav-link" data-section="section-aptitude"><i class="bi bi-calculator-fill"></i><span>Aptitude</span></a>
+      <a href="#section-web"       class="nav-link" data-section="section-web"><i class="bi bi-code-slash"></i><span>Web Dev</span></a>
+      <a href="#section-planner"   class="nav-link" data-section="section-planner"><i class="bi bi-calendar2-check"></i><span>Planner</span></a>
+      <a href="#section-analytics" class="nav-link" data-section="section-analytics"><i class="bi bi-bar-chart-line-fill"></i><span>Analytics</span></a>
+      <a href="#section-pomodoro"  class="nav-link" data-section="section-pomodoro"><i class="bi bi-stopwatch-fill"></i><span>Pomodoro</span></a>
+      <a href="#section-badges"    class="nav-link" data-section="section-badges"><i class="bi bi-award-fill"></i><span>Achievements</span></a>
+      <a href="#section-github"    class="nav-link" data-section="section-github"><i class="bi bi-github"></i><span>GitHub</span></a>
+      <a href="#section-resources" class="nav-link" data-section="section-resources"><i class="bi bi-bookmark-star-fill"></i><span>Resources</span></a>
+      <a href="#section-settings"  class="nav-link" data-section="section-settings"><i class="bi bi-sliders"></i><span>Settings</span></a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <a href="index.html" class="back-link">
+        <i class="bi bi-box-arrow-left"></i> Exit
+      </a>
+    </div>
+  </aside>
+
+  <!-- ============ MAIN CONTENT ============ -->
+  <main class="main-content">
+
+    <!-- Top bar -->
+    <header class="topbar">
+      <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
+        <i class="bi bi-list"></i>
+      </button>
+      <div class="topbar-search">
+        <i class="bi bi-search"></i>
+        <input type="text" placeholder="Type a command... e.g. 'add task'" id="searchBox"/>
+      </div>
+      <div class="topbar-right">
+        <div class="status-pill"><span class="status-dot"></span>ONLINE</div>
+        <div class="topbar-clock" id="topClock">--:--:--</div>
+        <button class="icon-btn" id="themeToggle" title="Toggle theme"><i class="bi bi-moon-stars-fill"></i></button>
+      </div>
+    </header>
+
+    <!-- ====== SECTION: HOME / OVERVIEW ====== -->
+    <section id="section-home" class="content-section active">
+      <div class="section-head">
+        <div>
+          <p class="prompt-line"><span class="prompt-symbol">~/shibi $</span> welcome --user=SHIBI</p>
+          <h1 class="page-title">Hello, <span class="accent">SHIBI</span> <i class="bi bi-stars"></i></h1>
+          <p class="page-sub" id="todayDate">Loading date...</p>
+        </div>
+        <div class="quote-box">
+          <i class="bi bi-quote"></i>
+          <p id="dailyQuote">Loading motivational quote...</p>
+        </div>
+      </div>
+
+      <!-- KPI cards -->
+      <div class="row g-3 kpi-row">
+        <div class="col-6 col-md-3">
+          <div class="kpi-card glass">
+            <div class="kpi-icon"><i class="bi bi-fire"></i></div>
+            <div class="kpi-val" id="kpiStreak">0</div>
+            <div class="kpi-label">DAY STREAK</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="kpi-card glass">
+            <div class="kpi-icon"><i class="bi bi-graph-up-arrow"></i></div>
+            <div class="kpi-val" id="kpiProgress">0%</div>
+            <div class="kpi-label">OVERALL PROGRESS</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="kpi-card glass">
+            <div class="kpi-icon"><i class="bi bi-hourglass-split"></i></div>
+            <div class="kpi-val" id="kpiHours">0.0h</div>
+            <div class="kpi-label">HOURS TODAY</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="kpi-card glass">
+            <div class="kpi-icon"><i class="bi bi-check2-square"></i></div>
+            <div class="kpi-val"><span id="kpiDone">0</span>/<span id="kpiTotal">0</span></div>
+            <div class="kpi-label">TASKS DONE</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Weekly goals + Quick nav -->
+      <div class="row g-3 mt-1">
+        <div class="col-lg-7">
+          <div class="panel glass">
+            <div class="panel-head">
+              <h3><i class="bi bi-flag-fill"></i> Weekly Goals</h3>
+              <button class="mini-btn" id="addGoalBtn"><i class="bi bi-plus"></i> Add</button>
+            </div>
+            <ul class="goals-list" id="goalsList">
+              <!-- filled by JS -->
+            </ul>
+            <p class="empty-hint" id="goalsEmpty" style="display:none;">No goals yet — add one above.</p>
+          </div>
+        </div>
+
+        <div class="col-lg-5">
+          <div class="panel glass">
+            <div class="panel-head"><h3><i class="bi bi-compass-fill"></i> Quick Access</h3></div>
+            <div class="quick-grid">
+              <a href="#section-java"     class="quick-card"><i class="bi bi-cup-hot-fill"></i><span>Java</span></a>
+              <a href="#section-dsa"      class="quick-card"><i class="bi bi-diagram-3-fill"></i><span>DSA</span></a>
+              <a href="#section-cyber"    class="quick-card"><i class="bi bi-shield-lock-fill"></i><span>Cyber</span></a>
+              <a href="#section-aptitude" class="quick-card"><i class="bi bi-calculator-fill"></i><span>Aptitude</span></a>
+              <a href="#section-web"      class="quick-card"><i class="bi bi-code-slash"></i><span>Web</span></a>
+              <a href="#section-pomodoro" class="quick-card"><i class="bi bi-stopwatch-fill"></i><span>Focus</span></a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hours today + pending counters -->
+      <div class="row g-3 mt-1">
+        <div class="col-md-6">
+          <div class="panel glass">
+            <div class="panel-head">
+              <h3><i class="bi bi-stopwatch"></i> Log Study Hours</h3>
+              <span class="badge-soft" id="hoursTodayBadge">0.0 h today</span>
+            </div>
+            <div class="hours-controls">
+              <button class="mini-btn" data-hours="0.5">+0.5 h</button>
+              <button class="mini-btn" data-hours="1">+1 h</button>
+              <button class="mini-btn" data-hours="2">+2 h</button>
+              <button class="mini-btn outline" id="resetHours">Reset</button>
+            </div>
+            <div class="hours-bar-wrap">
+              <div class="hours-bar" id="hoursBar"></div>
+            </div>
+            <p class="hours-target">Daily target: 6.0 hours</p>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="panel glass">
+            <div class="panel-head"><h3><i class="bi bi-list-task"></i> Task Snapshot</h3></div>
+            <div class="task-snapshot">
+              <div class="snap-box snap-pending">
+                <div class="snap-num" id="snapPending">0</div>
+                <div class="snap-label">PENDING</div>
+              </div>
+              <div class="snap-box snap-done">
+                <div class="snap-num" id="snapDone">0</div>
+                <div class="snap-label">COMPLETED</div>
+              </div>
+              <div class="snap-box snap-total">
+                <div class="snap-num" id="snapTotal">0</div>
+                <div class="snap-label">TOTAL</div>
+              </div>
+            </div>
+            <a href="#section-planner" class="mini-btn outline w-100 mt-3" data-section="section-planner">
+              Open Planner <i class="bi bi-arrow-right"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== SECTION: JAVA ====== -->
+    <section id="section-java" class="content-section">
+      <div class="section-head">
+        <div>
+          <p class="prompt-line"><span class="prompt-symbol">~/learn $</span> ./java --track</p>
+          <h1 class="page-title"><i class="bi bi-cup-hot-fill"></i> Java <span class="accent">Tracker</span></h1>
+          <p class="page-sub">Master core Java — placement essentials.</p>
+        </div>
+      </div>
+      <div class="panel glass">
+        <div class="panel-head">
+          <h3>Progress</h3>
+          <span class="badge-soft" id="javaPct">0%</span>
+        </div>
+        <div class="progress-track"><div class="progress-fill" id="javaBar"></div></div>
+        <ul class="check-list" id="javaList"></ul>
+      </div>
+    </section>
+
+    <!-- ====== SECTION: DSA ====== -->
+    <section id="section-dsa" class="content-section">
+      <div class="section-head">
+        <div>
+          <p class="prompt-line"><span class="prompt-symbol">~/learn $</span> ./dsa --solve</p>
+          <h1 class="page-title"><i class="bi bi-diagram-3-fill"></i> DSA <span class="accent">Tracker</span></h1>
+          <p class="page-sub">Crack every coding round, one problem at a time.</p>
+        </div>
+      </div>
+
+      <div class="row g-3">
+        <div class="col-md-4">
+          <div class="kpi-card glass">
+            <div class="kpi-icon"><i class="bi bi-code-square"></i></div>
+            <div class="kpi-val" id="dsaSolved">0</div>
+            <div class="kpi-label">PROBLEMS SOLVED</div>
+            <button class="mini-btn mt-2" id="dsaPlusBtn"><i class="bi bi-plus"></i> Add solved</button>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="kpi-card glass">
+            <div class="kpi-icon" style="color:var(--accent-yellow)"><i class="bi bi-stars"></i></div>
+            <div class="kpi-val" id="dsaToday">0</div>
+            <div class="kpi-label">SOLVED TODAY</div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="kpi-card glass">
+            <div class="kpi-icon" style="color:var(--accent-pink)"><i class="bi bi-trophy-fill"></i></div>
+            <div class="kpi-val" id="dsaStreak">0</div>
+            <div class="kpi-label">CODING STREAK</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel glass mt-3">
+        <div class="panel-head">
+          <h3>Topic Coverage</h3>
+          <span class="badge-soft" id="dsaPct">0%</span>
+        </div>
+        <div class="progress-track"><div class="progress-fill" id="dsaBar"></div></div>
+        <ul class="check-list" id="dsaList"></ul>
+      </div>
+
+      <div class="panel glass mt-3">
+        <div class="panel-head"><h3>Difficulty Tags</h3></div>
+        <div class="diff-tags">
+          <span class="diff-tag easy">EASY</span>
+          <span class="diff-tag med">MEDIUM</span>
+          <span class="diff-tag hard">HARD</span>
+        </div>
+        <p class="text-muted-soft mt-2 mb-0">Mix all 3 daily for balanced growth.</p>
+      </div>
+    </section>
+
+    <!-- ====== SECTION: CYBER ====== -->
+    <section id="section-cyber" class="content-section">
+      <div class="section-head">
+        <div>
+          <p class="prompt-line"><span class="prompt-symbol">~/sec $</span> sudo ./roadmap</p>
+          <h1 class="page-title"><i class="bi bi-shield-lock-fill"></i> Cybersecurity <span class="accent">Tracker</span></h1>
+          <p class="page-sub">SOC Analyst — incoming.</p>
+        </div>
+      </div>
+      <div class="panel glass">
+        <div class="panel-head">
+          <h3>Security Roadmap</h3>
+          <span class="badge-soft" id="cyberPct">0%</span>
+        </div>
+        <div class="progress-track"><div class="progress-fill" id="cyberBar"></div></div>
+        <ul class="check-list" id="cyberList"></ul>
+      </div>
+
+      <div class="panel glass mt-3">
+        <div class="panel-head">
+          <h3><i class="bi bi-bullseye"></i> TryHackMe Labs</h3>
+          <span class="badge-soft" id="thmCount">0 labs</span>
+        </div>
+        <div class="lab-controls">
+          <button class="mini-btn" id="labPlus"><i class="bi bi-plus"></i> Lab completed</button>
+          <button class="mini-btn outline" id="labReset">Reset</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== SECTION: APTITUDE ====== -->
+    <section id="section-aptitude" class="content-section">
+      <div class="section-head">
+        <div>
+          <p class="prompt-line"><span class="prompt-symbol">~/prep $</span> ./aptitude</p>
+          <h1 class="page-title"><i class="bi bi-calculator-fill"></i> Aptitude <span class="accent">Tracker</span></h1>
+          <p class="page-sub">Win the first cut-off round.</p>
+        </div>
+      </div>
+      <div class="panel glass">
+        <div class="panel-head">
+          <h3>Topics</h3>
+          <span class="badge-soft" id="aptPct">0%</span>
+        </div>
+        <div class="progress-track"><div class="progress-fill" id="aptBar"></div></div>
+        <ul class="check-list" id="aptList"></ul>
+      </div>
+      <div class="panel glass mt-3">
+        <div class="panel-head"><h3>Weekly Target</h3></div>
+        <p class="text-muted-soft">Practice goal: <strong>35 questions / week</strong> (5 per day).</p>
+        <div class="hours-controls">
+          <button class="mini-btn" data-apt="5">+5 Qs</button>
+          <button class="mini-btn" data-apt="10">+10 Qs</button>
+          <button class="mini-btn outline" id="aptReset">Reset week</button>
+        </div>
+        <div class="progress-track mt-3"><div class="progress-fill" id="aptWeekBar"></div></div>
+        <small class="text-muted-soft"><span id="aptWeekVal">0</span> / 35 this week</small>
+      </div>
+    </section>
+
+    <!-- ====== SECTION: WEB DEV ====== -->
+    <section id="section-web" class="content-section">
+      <div class="section-head">
+        <div>
+          <p class="prompt-line"><span class="prompt-symbol">~/web $</span> npm run learn</p>
+          <h1 class="page-title"><i class="bi bi-code-slash"></i> Web Dev <span class="accent">Tracker</span></h1>
+          <p class="page-sub">HTML → CSS → JS → Bootstrap → ReactJS.</p>
+        </div>
+      </div>
+      <div class="panel glass">
+        <div class="panel-head">
+          <h3>Stack Progress</h3>
+          <span class="badge-soft" id="webPct">0%</span>
+        </div>
+        <div class="progress-track"><div class="progress-fill" id="webBar"></div></div>
+        <ul class="check-list" id="webList"></ul>
+      </div>
+      <div class="panel glass mt-3">
+        <div class="panel-head">
+          <h3><i class="bi bi-boxes"></i> Mini Projects</h3>
+          <span class="badge-soft" id="projCount">0 built</span>
+        </div>
+        <div class="lab-controls">
+          <button class="mini-btn" id="projPlus"><i class="bi bi-plus"></i> Project completed</button>
+          <button class="mini-btn outline" id="projReset">Reset</button>
+        </div>
+        <p class="text-muted-soft mt-2 mb-0">Revision reminder: revisit each project after 7 days.</p>
+      </div>
+    </section>
+
+    <!-- ====== SECTION: PLANNER ====== -->
+    <section id="section-planner" class="content-section">
+      <div class="section-head">
+        <div>
+          <p class="prompt-line"><span class="prompt-symbol">~/today $</span> ./planner</p>
+          <h1 class="page-title"><i class="bi bi-calendar2-check"></i> Daily <span class="accent">Planner</span></h1>
+          <p class="page-sub">Plan the day. Execute. Repeat.</p>
+        </div>
+      </div>
+
+      <div class="panel glass">
+        <div class="panel-head"><h3>Add Task</h3></div>
+        <div class="task-form">
+          <input type="text" id="taskInput" placeholder="What do you want to accomplish?" />
+          <select id="taskPriority">
+            <option value="low">Low</option>
+            <option value="medium" selected>Medium</option>
+            <option value="high">High</option>
+          </select>
+          <button class="mini-btn primary" id="addTaskBtn"><i class="bi bi-plus-lg"></i> Add</button>
+        </div>
+      </div>
+
+      <div class="row g-3 mt-1">
+        <div class="col-md-6">
+          <div class="panel glass">
+            <div class="panel-head">
+              <h3><i class="bi bi-hourglass"></i> Pending</h3>
+              <span class="badge-soft" id="pendingCount">0</span>
+            </div>
+            <ul class="task-list" id="pendingList"></ul>
+            <p class="empty-hint" id="pendingEmpty">Nothing pending. Add a task above.</p>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="panel glass">
+            <div class="panel-head">
+              <h3><i class="bi bi-check2-all"></i> Completed</h3>
+              <span class="badge-soft" id="doneCount">0</span>
+            </div>
+            <ul class="task-list" id="doneList"></ul>
+            <p class="empty-hint" id="doneEmpty">No completed tasks yet.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel glass mt-3">
+        <div class="panel-head"><h3><i class="bi bi-journal-text"></i> Notes</h3></div>
+        <textarea id="notesArea" placeholder="Random thoughts, reminders, ideas..."></textarea>
+        <small class="text-muted-soft">Auto-saved locally as you type.</small>
+      </div>
+    </section>
+
+    <!-- ====== SECTION: ANALYTICS ====== -->
+    <section id="section-analytics" class="content-section">
+      <div class="section-head">
+        <div>
+          <p class="prompt-line"><span class="prompt-symbol">~/stats $</span> ./analytics</p>
+          <h1 class="page-title"><i class="bi bi-bar-chart-line-fill"></i> Progress <span class="accent">Analytics</span></h1>
+          <p class="page-sub">Numbers don't lie. Charts tell the story.</p>
+        </div>
+      </div>
+
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="panel glass chart-panel">
+            <div class="panel-head"><h3>Skill Completion</h3></div>
+            <canvas id="skillsChart"></canvas>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="panel glass chart-panel">
+            <div class="panel-head"><h3>Task Distribution</h3></div>
+            <canvas id="taskChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-3 mt-1">
+        <div class="col-12">
+          <div class="panel glass chart-panel">
+            <div class="panel-head"><h3>Weekly Productivity (hours)</h3></div>
+            <canvas id="weeklyChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== SECTION: POMODORO ====== -->
+    <section id="section-pomodoro" class="content-section">
+      <div class="section-head">
+        <div>
+          <p class="prompt-line"><span class="prompt-symbol">~/focus $</span> ./pomodoro --25/5</p>
+          <h1 class="page-title"><i class="bi bi-stopwatch-fill"></i> Pomodoro <span class="accent">Timer</span></h1>
+          <p class="page-sub">25 minutes of deep focus. 5 minutes to breathe.</p>
+        </div>
+      </div>
+
+      <div class="panel glass pomo-panel">
+        <div class="pomo-mode">
+          <button class="pomo-mode-btn active" data-mode="focus" data-min="25">FOCUS · 25</button>
+          <button class="pomo-mode-btn" data-mode="short" data-min="5">SHORT · 5</button>
+          <button class="pomo-mode-btn" data-mode="long" data-min="15">LONG · 15</button>
+        </div>
+
+        <div class="pomo-display">
+          <svg viewBox="0 0 200 200" class="pomo-ring">
+            <circle cx="100" cy="100" r="90" class="pomo-ring-bg"></circle>
+            <circle cx="100" cy="100" r="90" class="pomo-ring-fill" id="pomoRing"></circle>
+          </svg>
+          <div class="pomo-time" id="pomoTime">25:00</div>
+        </div>
+
+        <div class="pomo-controls">
+          <button class="btn-neon" id="pomoStart"><i class="bi bi-play-fill"></i> Start</button>
+          <button class="btn-ghost" id="pomoReset"><i class="bi bi-arrow-counterclockwise"></i> Reset</button>
+        </div>
+        <p class="text-muted-soft text-center mt-3">Sessions completed today: <span id="pomoCount">0</span></p>
+      </div>
+    </section>
+
+    <!-- ====== SECTION: BADGES ====== -->
+    <section id="section-badges" class="content-section">
+      <div class="section-head">
+        <div>
+          <p class="prompt-line"><span class="prompt-symbol">~/achievements $</span> ls</p>
+          <h1 class="page-title"><i class="bi bi-award-fill"></i> <span class="accent">Achievements</span></h1>
+          <p class="page-sub">Unlock badges as you grind. Streaks matter.</p>
+        </div>
+      </div>
+
+      <div class="row g-3" id="badgeGrid">
+        <!-- filled by JS -->
+      </div>
+
+      <div class="panel glass mt-3">
+        <div class="panel-head"><h3><i class="bi bi-trophy"></i> Weekly Challenge</h3></div>
+        <p class="weekly-chal" id="weeklyChal">Loading challenge...</p>
+      </div>
+    </section>
+
+    <!-- ====== SECTION: GITHUB ====== -->
+    <section id="section-github" class="content-section">
+      <div class="section-head">
+        <div>
+          <p class="prompt-line"><span class="prompt-symbol">~/git $</span> git log --oneline</p>
+          <h1 class="page-title"><i class="bi bi-github"></i> GitHub <span class="accent">Projects</span></h1>
+          <p class="page-sub">Track every project you ship.</p>
+        </div>
+      </div>
+
+      <div class="panel glass">
+        <div class="panel-head"><h3>Add Project</h3></div>
+        <div class="task-form">
+          <input type="text" id="repoName" placeholder="Project name (e.g. Portfolio Site)" />
+          <input type="text" id="repoLink" placeholder="GitHub URL (https://...)" />
+          <button class="mini-btn primary" id="addRepoBtn"><i class="bi bi-plus-lg"></i> Add</button>
+        </div>
+      </div>
+
+      <div class="panel glass mt-3">
+        <div class="panel-head">
+          <h3>My Repositories</h3>
+          <span class="badge-soft" id="repoCount">0</span>
+        </div>
+        <ul class="repo-list" id="repoList"></ul>
+        <p class="empty-hint" id="repoEmpty">No repos added yet.</p>
+      </div>
+    </section>
+
+    <!-- ====== SECTION: RESOURCES ====== -->
+    <section id="section-resources" class="content-section">
+      <div class="section-head">
+        <div>
+          <p class="prompt-line"><span class="prompt-symbol">~/links $</span> cat resources.txt</p>
+          <h1 class="page-title"><i class="bi bi-bookmark-star-fill"></i> <span class="accent">Resources</span></h1>
+          <p class="page-sub">Curated YouTube channels &amp; websites.</p>
+        </div>
+      </div>
+
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="panel glass">
+            <div class="panel-head"><h3><i class="bi bi-youtube"></i> YouTube</h3></div>
+            <ul class="resource-list">
+              <li><a href="https://www.youtube.com/@CodeWithHarry" target="_blank" rel="noopener">CodeWithHarry — Java/Web Dev</a></li>
+              <li><a href="https://www.youtube.com/@takeUforward" target="_blank" rel="noopener">Striver (takeUforward) — DSA</a></li>
+              <li><a href="https://www.youtube.com/@NetworkChuck" target="_blank" rel="noopener">NetworkChuck — Networking/Linux</a></li>
+              <li><a href="https://www.youtube.com/@JohnHammond010" target="_blank" rel="noopener">John Hammond — Cybersec</a></li>
+              <li><a href="https://www.youtube.com/@ApnaCollegeOfficial" target="_blank" rel="noopener">Apna College — Placements</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="panel glass">
+            <div class="panel-head"><h3><i class="bi bi-globe2"></i> Websites</h3></div>
+            <ul class="resource-list">
+              <li><a href="https://leetcode.com" target="_blank" rel="noopener">LeetCode — DSA practice</a></li>
+              <li><a href="https://tryhackme.com" target="_blank" rel="noopener">TryHackMe — Cybersec labs</a></li>
+              <li><a href="https://www.geeksforgeeks.org" target="_blank" rel="noopener">GeeksforGeeks — Theory</a></li>
+              <li><a href="https://developer.mozilla.org" target="_blank" rel="noopener">MDN — Web Docs</a></li>
+              <li><a href="https://www.indiabix.com" target="_blank" rel="noopener">IndiaBIX — Aptitude</a></li>
+              <li><a href="https://overthewire.org/wargames/" target="_blank" rel="noopener">OverTheWire — Linux/Sec</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== SECTION: SETTINGS ====== -->
+    <section id="section-settings" class="content-section">
+      <div class="section-head">
+        <div>
+          <p class="prompt-line"><span class="prompt-symbol">~/config $</span> ./settings</p>
+          <h1 class="page-title"><i class="bi bi-sliders"></i> <span class="accent">Customize</span></h1>
+          <p class="page-sub">Make this dashboard yours.</p>
+        </div>
+      </div>
+
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="panel glass">
+            <div class="panel-head"><h3>Accent Color</h3></div>
+            <div class="theme-swatches">
+              <button class="swatch" data-accent="#00ffd0" style="--c:#00ffd0" title="Cyan"></button>
+              <button class="swatch" data-accent="#a855f7" style="--c:#a855f7" title="Purple"></button>
+              <button class="swatch" data-accent="#22c55e" style="--c:#22c55e" title="Green"></button>
+              <button class="swatch" data-accent="#f97316" style="--c:#f97316" title="Orange"></button>
+              <button class="swatch" data-accent="#ec4899" style="--c:#ec4899" title="Pink"></button>
+              <button class="swatch" data-accent="#facc15" style="--c:#facc15" title="Yellow"></button>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="panel glass">
+            <div class="panel-head"><h3>Background Effects</h3></div>
+            <label class="toggle-row">
+              <span>Matrix rain</span>
+              <input type="checkbox" id="toggleMatrix" checked />
+            </label>
+            <label class="toggle-row">
+              <span>Floating particles</span>
+              <input type="checkbox" id="toggleParticles" checked />
+            </label>
+            <label class="toggle-row">
+              <span>Light mode</span>
+              <input type="checkbox" id="toggleLight" />
+            </label>
+          </div>
+        </div>
+        <div class="col-12">
+          <div class="panel glass">
+            <div class="panel-head"><h3 class="text-danger">Danger Zone</h3></div>
+            <p class="text-muted-soft">Clear all locally-saved data (progress, tasks, notes, settings).</p>
+            <button class="mini-btn outline" id="resetAllBtn"><i class="bi bi-trash3"></i> Reset everything</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Toast container -->
+  <div class="toast-stack" id="toastStack"></div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <script src="assets/js/effects.js"></script>
+  <script src="assets/js/script.js"></script>
+</body>
+</html>
