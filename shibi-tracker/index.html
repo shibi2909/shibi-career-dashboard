@@ -127,9 +127,10 @@
       const now = new Date();
       const days = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
       document.getElementById('liveDay').textContent = days[now.getDay()];
-      const hh = String(now.getHours()).padStart(2,'0');
-      const mm = String(now.getMinutes()).padStart(2,'0');
-      document.getElementById('liveTime').textContent = `${hh}:${mm}`;
+      let h = now.getHours(), m = now.getMinutes();
+      const ampm = h >= 12 ? 'PM' : 'AM';
+      h = h % 12 || 12;
+      document.getElementById('liveTime').textContent = `${h}:${String(m).padStart(2,'0')} ${ampm}`;
     }
     updateClock();
     setInterval(updateClock, 1000);
