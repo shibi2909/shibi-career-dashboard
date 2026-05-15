@@ -22,7 +22,12 @@ window.SHIBI.Gamify = (function () {
     { id: 'xp_1000',      icon: 'bi-gem',                 name: 'XP · 1000',       desc: 'Earn 1000 XP',                        check: function (s) { return (s.xp || 0) >= 1000; } },
     { id: 'xp_2500',      icon: 'bi-diamond-fill',        name: 'XP · 2500',       desc: 'Earn 2500 XP',                        check: function (s) { return (s.xp || 0) >= 2500; } },
     { id: 'quiz_ace',     icon: 'bi-trophy-fill',         name: 'QUIZ ACE',        desc: 'Score 100% on any quiz',              check: function (s) { return s.quizHistory && s.quizHistory.some(function (q) { return q.score === q.total; }); } },
-    { id: 'thm_10',       icon: 'bi-shield-check',        name: 'THM HERO',        desc: 'Complete 10 TryHackMe labs',          check: function (s) { return s.thmLabs >= 10; } }
+    { id: 'thm_10',       icon: 'bi-shield-check',        name: 'THM HERO',        desc: 'Complete 10 TryHackMe labs',          check: function (s) { return s.thmLabs >= 10; } },
+    { id: 'mock_master',  icon: 'bi-person-badge-fill',   name: 'MOCK MASTER',     desc: 'Log 3 mock interviews',               check: function (s) { return s.mockInterviews && s.mockInterviews.length >= 3; } },
+    { id: 'day90_grad',   icon: 'bi-mortarboard-fill',    name: 'DAY-90 GRAD',     desc: 'Study consistently for 90 days',      check: function (s) { return s.dailyActivity && Object.keys(s.dailyActivity).length >= 90; } },
+    { id: 'code_sprint',  icon: 'bi-speedometer',         name: 'CODE SPRINT',     desc: 'Solve 10 problems in one day',        check: function (s) { return s.dailyActivity && Object.values(s.dailyActivity).some(function (d) { return (d.problemsSolved || 0) >= 10; }); } },
+    { id: 'resume_ready', icon: 'bi-file-earmark-check-fill', name: 'RESUME READY', desc: 'Resume completeness ≥ 80%',          check: function (s) { return window.SHIBI && SHIBI.Resume && SHIBI.Resume.completeness && SHIBI.Resume.completeness(s) >= 80; } },
+    { id: 'company_champ',icon: 'bi-buildings-fill',      name: 'COMPANY CHAMP',  desc: 'Complete all topics for any company', check: function (s) { if (!window.SHIBI_COMPANIES || !s.companyProgress) return false; return SHIBI_COMPANIES.some(function (co) { var p = s.companyProgress[co.id]; return p && p.topicsDone && p.topicsDone.length >= co.topics.length; }); } }
   ];
 
   var WEEKLY_CHALLENGES = [

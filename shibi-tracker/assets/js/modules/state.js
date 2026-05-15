@@ -1,9 +1,10 @@
-/* modules/state.js — single source of truth + localStorage I/O */
+/* modules/state.js — single source of truth + localStorage I/O (v3) */
 window.SHIBI = window.SHIBI || {};
 window.SHIBI.State = (function () {
 
   var V1_KEY = 'shibi.dashboard.v1';
   var V2_KEY = 'shibi.dashboard.v2';
+  var V3_KEY = 'shibi.dashboard.v3';
 
   function defaultState() {
     return {
@@ -47,6 +48,7 @@ window.SHIBI.State = (function () {
       earnedBadges: [],
       xp: 0,
       level: 1,
+      xpHistory: [],  // [{ts, amount, reason}]
 
       monthlyTargetsDone: {},
       weeklyTargetsDone: {},
@@ -55,72 +57,133 @@ window.SHIBI.State = (function () {
 
       quizHistory: [],
 
+      // v3: daily activity for heatmap
+      dailyActivity: {},  // { "YYYY-MM-DD": { hours, problemsSolved, tasksDone, score } }
+
+      // v3: placement countdown
+      placement: {
+        targetDate: null,
+        totalDays: 90,
+        targetHoursPerDay: 6
+      },
+
+      // v3: interview prep
+      interviewPracticed: {},  // { questionId: true }
+      mockInterviews: [],       // [{date, type, feedback, score/10}]
+
+      // v3: company tracker
+      companyProgress: {},      // { companyId: { topicsDone: [] } }
+
+      // v3: cyber labs
+      labsDone: {},             // { labId: { done, notes, completedDate } }
+
+      // v3: daily coding challenge
+      dailyChallenges: {},      // { "YYYY-MM-DD": { easy: bool, med: bool, hard: bool } }
+      dailyChallengeStreak: 0,
+      dailyChallengeLast: null,
+
+      // v3: resume
+      resume: {
+        name: '', email: '', phone: '', github: '', linkedin: '',
+        summary: '',
+        education: [],      // [{degree, institution, year, cgpa}]
+        skills: [],         // ['Java', 'Python', ...]
+        projects: [],       // [{name, description, tech, link}]
+        certifications: [], // [{name, issuer, year}]
+        experience: []      // [{role, company, duration, description}]
+      },
+
+      // v3: notes vault
+      notesVault: [],  // [{id, title, category, body, tags, pinned, createdTs, updatedTs}]
+
+      // v3: focus sessions
+      focusSessions: [],  // [{startTs, durationMs, endedAt}]
+
       settings: {
         accent:        '#00ffd0',
         matrix:        true,
         particles:     true,
         light:         false,
-        cardStyle:     'glass',    // 'glass' | 'solid' | 'neon'
-        fontScale:     'default',  // 'sm' | 'default' | 'lg'
+        cardStyle:     'glass',
+        fontScale:     'default',
         reducedMotion: false,
-        bgDim:         0.18,       // opacity of matrix bg (0.05–0.40)
+        bgDim:         0.18,
         compactMode:   false
       }
     };
   }
 
-  function migrateV1() {
-    try {
-      var raw = localStorage.getItem(V1_KEY);
-      if (!raw) return null;
-      var old = JSON.parse(raw);
-      var fresh = defaultState();
-      // copy compatible fields
-      var copy = ['streak', 'lastActiveDate', 'hoursToday', 'hoursDate',
-        'weeklyHours', 'weeklyHoursDate', 'dsaSolved', 'dsaToday',
-        'dsaTodayDate', 'dsaStreak', 'thmLabs', 'miniProjects',
-        'aptWeek', 'aptWeekDate', 'tasks', 'goals', 'notes',
-        'repos', 'pomoToday', 'pomoTodayDate', 'pomoTotal', 'earnedBadges'];
-      copy.forEach(function (k) { if (old[k] !== undefined) fresh[k] = old[k]; });
-      if (old.settings) Object.assign(fresh.settings, old.settings);
-      if (old.trackers) {
-        ['java', 'dsa', 'cyber', 'aptitude', 'web'].forEach(function (k) {
-          if (old.trackers[k]) fresh.trackers[k] = old.trackers[k];
-        });
-      }
-      return fresh;
-    } catch (e) {
-      return null;
+  function migrateOld(oldParsed) {
+    var fresh = defaultState();
+    var copyFields = [
+      'streak', 'lastActiveDate', 'joinDate',
+      'hoursToday', 'hoursDate', 'weeklyHours', 'weeklyHoursDate',
+      'dsaSolved', 'dsaToday', 'dsaTodayDate', 'dsaStreak',
+      'thmLabs', 'miniProjects',
+      'aptWeek', 'aptWeekDate',
+      'tasks', 'goals', 'notes', 'repos',
+      'pomoToday', 'pomoTodayDate', 'pomoTotal',
+      'earnedBadges', 'xp', 'level', 'xpHistory',
+      'monthlyTargetsDone', 'weeklyTargetsDone',
+      'roadmapDaysDone', 'roadmapTasksDone',
+      'quizHistory',
+      'dailyActivity', 'placement',
+      'interviewPracticed', 'mockInterviews',
+      'companyProgress', 'labsDone',
+      'dailyChallenges', 'dailyChallengeStreak', 'dailyChallengeLast',
+      'resume', 'notesVault', 'focusSessions'
+    ];
+    copyFields.forEach(function (k) {
+      if (oldParsed[k] !== undefined) fresh[k] = oldParsed[k];
+    });
+    if (oldParsed.settings) Object.assign(fresh.settings, oldParsed.settings);
+    if (oldParsed.trackers) {
+      ['java', 'dsa', 'cyber', 'aptitude', 'web', 'networking'].forEach(function (k) {
+        if (oldParsed.trackers[k]) fresh.trackers[k] = oldParsed.trackers[k];
+      });
     }
+    return fresh;
   }
 
   function load() {
-    // check v2
+    // try v3 first
     try {
-      var raw = localStorage.getItem(V2_KEY);
-      if (raw) {
-        var parsed = JSON.parse(raw);
-        return Object.assign(defaultState(), parsed);
+      var raw3 = localStorage.getItem(V3_KEY);
+      if (raw3) {
+        var parsed3 = JSON.parse(raw3);
+        return Object.assign(defaultState(), parsed3);
       }
     } catch (e) {}
 
-    // migrate from v1 if present
-    var migrated = migrateV1();
-    if (migrated) {
-      localStorage.setItem(V2_KEY, JSON.stringify(migrated));
-      return migrated;
-    }
+    // migrate from v2
+    try {
+      var raw2 = localStorage.getItem(V2_KEY);
+      if (raw2) {
+        var migrated = migrateOld(JSON.parse(raw2));
+        localStorage.setItem(V3_KEY, JSON.stringify(migrated));
+        return migrated;
+      }
+    } catch (e) {}
+
+    // migrate from v1
+    try {
+      var raw1 = localStorage.getItem(V1_KEY);
+      if (raw1) {
+        var migrated1 = migrateOld(JSON.parse(raw1));
+        localStorage.setItem(V3_KEY, JSON.stringify(migrated1));
+        return migrated1;
+      }
+    } catch (e) {}
 
     return defaultState();
   }
 
   function save(s) {
-    localStorage.setItem(V2_KEY, JSON.stringify(s));
+    localStorage.setItem(V3_KEY, JSON.stringify(s));
   }
 
   function reset() {
-    localStorage.removeItem(V2_KEY);
-    localStorage.removeItem(V1_KEY);
+    [V3_KEY, V2_KEY, V1_KEY].forEach(function (k) { localStorage.removeItem(k); });
     location.reload();
   }
 
@@ -137,19 +200,19 @@ window.SHIBI.State = (function () {
       s.hoursDate  = today;
     }
     if (s.dsaTodayDate !== today) {
-      s.dsaToday    = 0;
+      s.dsaToday     = 0;
       s.dsaTodayDate = today;
     }
     if (s.pomoTodayDate !== today) {
-      s.pomoToday    = 0;
+      s.pomoToday     = 0;
       s.pomoTodayDate = today;
     }
     if (s.weeklyHoursDate !== week) {
-      s.weeklyHours    = [0, 0, 0, 0, 0, 0, 0];
+      s.weeklyHours     = [0, 0, 0, 0, 0, 0, 0];
       s.weeklyHoursDate = week;
     }
     if (s.aptWeekDate !== week) {
-      s.aptWeek    = 0;
+      s.aptWeek     = 0;
       s.aptWeekDate = week;
     }
     save(s);
@@ -167,8 +230,18 @@ window.SHIBI.State = (function () {
       }
       s.lastActiveDate = today;
     }
+    // bump daily activity
+    if (!s.dailyActivity) s.dailyActivity = {};
+    if (!s.dailyActivity[today]) s.dailyActivity[today] = { hours: 0, problemsSolved: 0, tasksDone: 0, score: 0 };
     return s;
   }
 
-  return { load, save, reset, dailyReset, markStudy, defaultState };
+  function bumpActivity(s, field, amount) {
+    var today = SHIBI.Time.todayStr();
+    if (!s.dailyActivity) s.dailyActivity = {};
+    if (!s.dailyActivity[today]) s.dailyActivity[today] = { hours: 0, problemsSolved: 0, tasksDone: 0, score: 0 };
+    s.dailyActivity[today][field] = (s.dailyActivity[today][field] || 0) + (amount || 1);
+  }
+
+  return { load, save, reset, dailyReset, markStudy, bumpActivity, defaultState };
 })();
