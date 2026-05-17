@@ -18,7 +18,8 @@ window.SHIBI.Nav = (function () {
     document.querySelectorAll('[data-section]').forEach(function (el) {
       el.addEventListener('click', function (e) {
         var id = el.dataset.section;
-        if (id) { e.preventDefault(); show(id); }
+        // Call SHIBI.Nav.show so script.js override (re-render hooks) fires on navigation
+        if (id) { e.preventDefault(); SHIBI.Nav.show(id); }
       });
     });
     var toggle = document.getElementById('sidebarToggle');

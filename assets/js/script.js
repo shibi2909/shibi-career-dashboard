@@ -82,25 +82,84 @@ document.addEventListener('DOMContentLoaded', function () {
   // Feature 15: Placement Readiness Engine
   SHIBI.Readiness.init(s);
 
+  // Feature C: Smart Weakness Detection
+  if (window.SHIBI && SHIBI.Weakness) SHIBI.Weakness.init(s);
+
+  // v4: i18n infrastructure
+  SHIBI.I18n.init(s);
+
+  // v4: Timetable engine (no init needed — pure functions)
+
+  // v4: Prep Setup wizard + day strip
+  SHIBI.PrepSetup.init(s);
+
+  // Wire language toggle pill
+  var langPill = document.getElementById('langTogglePill');
+  if (langPill) langPill.addEventListener('click', function () { SHIBI.I18n.toggle(s); });
+
+  // Wire settings language buttons
+  var sLangEN = document.getElementById('settingLangEN');
+  var sLangML = document.getElementById('settingLangML');
+  if (sLangEN) sLangEN.addEventListener('click', function () { SHIBI.I18n.setLang('en', s); });
+  if (sLangML) sLangML.addEventListener('click', function () { SHIBI.I18n.setLang('ml', s); });
+
   // Analytics charts (deferred — build when entering analytics section)
   setTimeout(function () { SHIBI.Analytics.build(s); }, 300);
 
   // Resources YouTube gallery
   renderYouTubeResources();
 
+  // ── Inject "Home" button into every section header ──────────────────────
+  function injectHomeButtons() {
+    document.querySelectorAll('.content-section').forEach(function (section) {
+      if (section.id === 'section-home') return; // skip home itself
+      var head = section.querySelector('.section-head');
+      if (!head || head.querySelector('.back-home-btn')) return;
+      var btn = document.createElement('button');
+      btn.className = 'back-home-btn mini-btn outline';
+      btn.innerHTML = '<i class="bi bi-house-fill"></i> Home';
+      btn.addEventListener('click', function () { SHIBI.Nav.show('section-home'); });
+      head.insertBefore(btn, head.firstChild);
+    });
+  }
+  injectHomeButtons();
+
+  // ── Topbar breadcrumb ─────────────────────────────────────────────────────
+  function updateBreadcrumb(id) {
+    var bc = document.getElementById('topbarBreadcrumb');
+    if (!bc) return;
+    var titleEl = document.querySelector('#' + id + ' .page-title');
+    var sectionTitle = titleEl ? (titleEl.textContent || '').trim() : '';
+    if (!sectionTitle) {
+      var navLabel = document.querySelector('.nav-link[data-section="' + id + '"] span');
+      sectionTitle = navLabel ? (navLabel.textContent || '').trim() : id.replace('section-', '').replace(/-/g, ' ');
+    }
+    bc.textContent = sectionTitle;
+  }
+
   // Hook section-entry re-renders
   var origShow = SHIBI.Nav.show;
   SHIBI.Nav.show = function (id) {
     origShow(id);
+    updateBreadcrumb(id);
+    // Inject home button into sections rendered dynamically (e.g. prepSetup, countdown)
+    setTimeout(injectHomeButtons, 50);
     if (id === 'section-analytics') setTimeout(function () { SHIBI.Analytics.build(s); }, 60);
-    if (id === 'section-mentor')    SHIBI.Mentor.render(s);
+    if (id === 'section-mentor')    { SHIBI.Mentor.render(s); if (SHIBI.Weakness) SHIBI.Weakness.render(s); }
     if (id === 'section-heatmap')   SHIBI.Heatmap.render(s);
     if (id === 'section-companies') SHIBI.Companies.renderGrid(s);
     if (id === 'section-resume')    SHIBI.Resume.render(s);
-    if (id === 'section-roadmap')   SHIBI.Roadmap.render(s);
-    if (id === 'section-notes')     SHIBI.Notes.render(s);
-    if (id === 'section-readiness') SHIBI.Readiness.render(s);
+    if (id === 'section-labs')        { if (SHIBI.Labs)    SHIBI.Labs.render(s); }
+    if (id === 'section-challenge')   { if (SHIBI.Challenge) SHIBI.Challenge.render(s); }
+    if (id === 'section-home')        { if (SHIBI.Weakness)  SHIBI.Weakness.render(s); }
+    if (id === 'section-roadmap')     SHIBI.Roadmap.render(s);
+    if (id === 'section-notes')       SHIBI.Notes.render(s);
+    if (id === 'section-readiness')   SHIBI.Readiness.render(s);
+    if (id === 'section-prep-setup')  SHIBI.PrepSetup.renderSection(s);
+    if (id === 'section-mission')     SHIBI.Missions.render(s);
   };
+  // Set initial breadcrumb for home section
+  updateBreadcrumb('section-home');
 });
 
 function renderYouTubeResources() {

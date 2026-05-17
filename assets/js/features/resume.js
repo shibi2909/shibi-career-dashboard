@@ -41,6 +41,8 @@ window.SHIBI.Resume = (function () {
     if (!container) return;
     if (!s.resume) s.resume = SHIBI.State.defaultState().resume;
     var r = s.resume;
+    // Guard: skills must be an array (old saves may have stored it as an object)
+    if (!Array.isArray(r.skills)) r.skills = [];
     var pct = completeness(s);
 
     container.innerHTML =
@@ -75,11 +77,17 @@ window.SHIBI.Resume = (function () {
             '<div id="eduList">' + (r.education || []).map(function (e, i) { return eduRow(e, i); }).join('') + '</div>' +
           '</div>' +
 
-          // skills
+          // skills (tag-input chip UI)
           '<div class="panel glass mb-3">' +
             '<div class="panel-head"><h3>Technical Skills</h3></div>' +
-            '<textarea id="resume-skills" rows="3" placeholder="Java, DSA, Python, SQL, Networking, Linux, Git, HTML/CSS/JS..." style="width:100%;background:var(--bg-elev);border:1px solid var(--border-soft);color:var(--text);padding:10px;border-radius:8px;font-family:var(--font-mono);font-size:12px;resize:vertical;outline:none">' + (r.skills || []).join(', ') + '</textarea>' +
-            '<small class="text-muted-soft">Separate skills with commas.</small>' +
+            '<div class="tag-input-wrap" id="skillChipsWrap">' +
+              (r.skills || []).map(function (sk) {
+                return '<span class="skill-chip">' + SHIBI.Utils.escapeHtml(sk) +
+                  '<span class="remove" data-skill="' + SHIBI.Utils.escapeAttr(sk) + '" title="Remove">×</span></span>';
+              }).join('') +
+              '<input id="skillTagInput" class="skill-tag-input" type="text" placeholder="Type skill + Enter..." />' +
+            '</div>' +
+            '<small class="text-muted-soft">Press Enter or comma to add a skill. Click × to remove.</small>' +
           '</div>' +
 
           // projects
@@ -209,13 +217,41 @@ window.SHIBI.Resume = (function () {
       });
     });
 
-    // skills textarea
-    var skillsEl = document.getElementById('resume-skills');
-    if (skillsEl) skillsEl.addEventListener('input', function () {
-      r.skills = skillsEl.value.split(',').map(function (sk) { return sk.trim(); }).filter(Boolean);
+    // skills — tag-input chip handling
+    var skillWrap  = document.getElementById('skillChipsWrap');
+    var skillInput = document.getElementById('skillTagInput');
+
+    function addSkillChip(val) {
+      var sk = val.trim().replace(/,$/, '');
+      if (!sk || (r.skills || []).includes(sk)) return;
+      if (!r.skills) r.skills = [];
+      r.skills.push(sk);
       SHIBI.State.save(s);
-      updatePreview(s);
-    });
+      render(s);
+    }
+
+    if (skillInput) {
+      skillInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ',') {
+          e.preventDefault();
+          addSkillChip(skillInput.value);
+        }
+      });
+      skillInput.addEventListener('blur', function () {
+        if (skillInput.value.trim()) addSkillChip(skillInput.value);
+      });
+    }
+
+    if (skillWrap) {
+      skillWrap.addEventListener('click', function (e) {
+        var rem = e.target.closest('.remove');
+        if (!rem) return;
+        var sk = rem.dataset.skill;
+        r.skills = (r.skills || []).filter(function (x) { return x !== sk; });
+        SHIBI.State.save(s);
+        render(s);
+      });
+    }
 
     // add education
     var addEdu = document.getElementById('addEduBtn');

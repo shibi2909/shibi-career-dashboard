@@ -8,18 +8,20 @@ window.SHIBI.Countdown = (function () {
   var CIRCUMFERENCE = 565.48; // 2π × r(90)
 
   function getDaysLeft(s) {
-    if (!s.placement || !s.placement.targetDate) return null;
-    var target = new Date(s.placement.targetDate);
+    // v4: prefer endDate; fallback to targetDate
+    var endStr = (s.placement && (s.placement.endDate || s.placement.targetDate));
+    if (!endStr) return null;
+    var target = new Date(endStr + 'T00:00:00');
     var today  = new Date(); today.setHours(0, 0, 0, 0);
-    var diff = Math.ceil((target - today) / 86400000);
-    return diff;
+    return Math.ceil((target - today) / 86400000);
   }
 
   function getTotalDays(s) {
-    if (!s.placement || !s.placement.targetDate) return 90;
-    var joinDate   = new Date(s.joinDate || s.placement.targetDate);
-    var targetDate = new Date(s.placement.targetDate);
-    var diff = Math.ceil((targetDate - joinDate) / 86400000);
+    if (window.SHIBI && SHIBI.Timetable) return SHIBI.Timetable.totalDays(s);
+    var endStr = (s.placement && (s.placement.endDate || s.placement.targetDate));
+    if (!endStr) return 90;
+    var startStr   = (s.placement && s.placement.startDate) || s.joinDate || endStr;
+    var diff = Math.ceil((new Date(endStr) - new Date(startStr)) / 86400000);
     return Math.max(1, diff);
   }
 
@@ -76,6 +78,7 @@ window.SHIBI.Countdown = (function () {
       if (!val) { SHIBI.Utils.toast('Please pick a date'); return; }
       if (!s.placement) s.placement = {};
       s.placement.targetDate        = val;
+      s.placement.endDate           = val;   // keep both in sync
       s.placement.targetHoursPerDay = hrs;
       SHIBI.State.save(s);
       render(s);
@@ -106,7 +109,7 @@ window.SHIBI.Countdown = (function () {
 
     section.innerHTML =
       '<div class="section-head"><div>' +
-        '<p class="prompt-line"><span class="prompt-symbol">~/prep $</span> ./countdown --target=' + s.placement.targetDate + '</p>' +
+        '<p class="prompt-line"><span class="prompt-symbol">~/prep $</span> ./countdown --target=' + (s.placement.endDate || s.placement.targetDate) + '</p>' +
         '<h1 class="page-title"><i class="bi bi-calendar-event"></i> Placement <span class="accent">Countdown</span></h1>' +
         '<p class="page-sub">Stay on track. Every day counts.</p>' +
       '</div></div>' +
@@ -126,7 +129,7 @@ window.SHIBI.Countdown = (function () {
                 '<div style="font-family:var(--font-mono);font-size:11px;color:var(--text-mute);letter-spacing:2px;margin-top:4px">DAYS LEFT</div>' +
               '</div>' +
             '</div>' +
-            '<div style="font-family:var(--font-mono);font-size:11px;color:var(--text-mute);margin-top:12px">Target: ' + s.placement.targetDate + '</div>' +
+            '<div style="font-family:var(--font-mono);font-size:11px;color:var(--text-mute);margin-top:12px">Target: ' + (s.placement.endDate || s.placement.targetDate) + '</div>' +
             '<button class="mini-btn outline mt-2" id="changePlacementDateBtn" style="font-size:11px">Change Date</button>' +
           '</div>' +
         '</div>' +

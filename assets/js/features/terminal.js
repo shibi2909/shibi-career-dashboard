@@ -9,8 +9,10 @@ window.SHIBI.Terminal = (function () {
 
   var CMD_NAMES = [
     'help', 'clear', 'exit', 'whoami', 'xp', 'status', 'streak', 'countdown',
-    'add task ', 'show pending', 'show done', 'start pomodoro', 'stop pomodoro',
-    'show weak', 'log hours ', 'dsa +1', 'lab done ', 'challenge solved ', 'open '
+    'add task ', 'show pending', 'show done', 'clear tasks',
+    'start pomodoro', 'stop pomodoro',
+    'show weak', 'show notes', 'log hours ', 'dsa +1',
+    'lab done ', 'challenge solved ', 'open ', 'version'
   ];
 
   // ─── Output helpers ───────────────────────────────────────────
@@ -51,7 +53,8 @@ window.SHIBI.Terminal = (function () {
       'streak': cmdStreak, 'countdown': cmdCountdown,
       'show pending': cmdPending, 'show done': cmdDone,
       'start pomodoro': cmdStartPomo, 'stop pomodoro': cmdStopPomo,
-      'show weak': cmdShowWeak, 'dsa +1': cmdDsaPlus,
+      'show weak': cmdShowWeak, 'show notes': cmdShowNotes, 'version': cmdVersion,
+      'clear tasks': cmdClearTasks, 'dsa +1': cmdDsaPlus,
       'add task': function () { append('Usage: <strong>add task</strong> &lt;task name&gt;', 'term-warn'); },
       'log hours': function () { append('Usage: <strong>log hours</strong> &lt;number&gt;', 'term-warn'); },
       'lab done': function () { append('Usage: <strong>lab done</strong> &lt;lab-name&gt;', 'term-warn'); },
@@ -83,7 +86,10 @@ window.SHIBI.Terminal = (function () {
       ['start pomodoro',               'start 25-min focus session'],
       ['stop pomodoro',                'stop Pomodoro timer'],
       ['show weak',                    'show weakest study areas'],
-      ['open &lt;section&gt;',         'navigate (e.g. open notes)'],
+      ['show notes',                   'list all note titles in Notes Vault'],
+      ['clear tasks',                  'delete all completed tasks'],
+      ['open &lt;section&gt;',         'navigate (e.g. open notes, open roadmap)'],
+      ['version',                      'SHIBI.OS version and stack info'],
       ['clear',                        'clear terminal output'],
       ['exit',                         'close terminal']
     ];
@@ -232,6 +238,31 @@ window.SHIBI.Terminal = (function () {
     SHIBI.Gamify.addXP(_state, xp, 'Challenge (' + diff + ')');
     SHIBI.State.save(_state);
     append(diff + ' challenge solved! +' + xp + ' XP', 'term-ok');
+  }
+
+  function cmdShowNotes() {
+    var notes = (_state.notesVault || []);
+    if (!notes.length) { append('No notes in vault yet — open Notes Vault to add some.', 'term-warn'); return; }
+    notes.forEach(function (n, i) {
+      var cat = (n.tags || n.category || 'misc').split(',')[0].trim().toUpperCase();
+      append((i + 1) + '. [' + cat + '] ' + SHIBI.Utils.escapeHtml(n.title || 'Untitled'), '');
+    });
+    append('Total: ' + notes.length + ' note(s) — type <strong>open notes</strong> to view.', 'term-hint');
+  }
+
+  function cmdVersion() {
+    append('SHIBI.OS v4 — Phase 3 complete', 'term-ok');
+    append('Stack: HTML + CSS + Bootstrap 5 + Vanilla JS + Chart.js | No npm, no build step.', '');
+    append('Modules: Tracker · Planner · Pomodoro · Gamify · Notes · Terminal · Roadmap · Resume · Readiness', '');
+    append('Commands: ' + CMD_NAMES.length + ' supported — type <strong>help</strong> for list.', '');
+  }
+
+  function cmdClearTasks() {
+    var done = (_state.tasks || []).filter(function (t) { return t.done; });
+    if (!done.length) { append('No completed tasks to clear.', 'term-warn'); return; }
+    _state.tasks = (_state.tasks || []).filter(function (t) { return !t.done; });
+    SHIBI.State.save(_state);
+    append('Cleared <span style="color:var(--accent)">' + done.length + '</span> completed task(s).', 'term-ok');
   }
 
   function cmdOpen(section) {

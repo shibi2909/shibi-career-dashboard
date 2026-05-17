@@ -3,22 +3,33 @@ window.SHIBI = window.SHIBI || {};
 window.SHIBI.Targets = (function () {
 
   function getJoinDate(s) {
-    return s.joinDate ? new Date(s.joinDate) : new Date();
+    // v4: prefer timetable start date; fallback to joinDate
+    var startStr = (s.placement && s.placement.startDate) || s.joinDate;
+    return startStr ? new Date(startStr + 'T00:00:00') : new Date();
+  }
+
+  function getTotalDays(s) {
+    if (window.SHIBI && SHIBI.Timetable) return SHIBI.Timetable.totalDays(s);
+    return 90;
   }
 
   function getCurrentDay(s) {
     var start = getJoinDate(s);
-    var now   = new Date();
+    var now   = new Date(); now.setHours(0, 0, 0, 0);
     var diff  = Math.floor((now - start) / 86400000);
-    return Math.max(1, Math.min(90, diff + 1));
+    return Math.max(1, Math.min(getTotalDays(s), diff + 1));
   }
 
   function getCurrentWeek(s) {
-    return Math.min(12, Math.max(1, Math.ceil(getCurrentDay(s) / 7)));
+    var total = getTotalDays(s);
+    var maxW  = Math.ceil(total / 7);
+    return Math.min(maxW, Math.max(1, Math.ceil(getCurrentDay(s) / 7)));
   }
 
   function getCurrentMonth(s) {
-    return Math.min(3, Math.max(1, Math.ceil(getCurrentDay(s) / 30)));
+    var total = getTotalDays(s);
+    var maxM  = Math.ceil(total / 30);
+    return Math.min(maxM, Math.max(1, Math.ceil(getCurrentDay(s) / 30)));
   }
 
   function getMonthlyDonePct(s, monthIdx) {
