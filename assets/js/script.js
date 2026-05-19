@@ -5,6 +5,25 @@ document.addEventListener('DOMContentLoaded', function () {
   var s = SHIBI.State.load();
   s = SHIBI.State.dailyReset(s);
 
+  // FIX BUG-D: health-check localStorage round-trip + private-mode detection
+  (function () {
+    var testKey = '__shibi_test__';
+    try {
+      localStorage.setItem(testKey, '1');
+      if (localStorage.getItem(testKey) !== '1') throw new Error('read-back mismatch');
+      localStorage.removeItem(testKey);
+    } catch (e) {
+      var warn = document.createElement('div');
+      warn.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:10000;' +
+        'background:rgba(255,77,109,0.15);border-bottom:2px solid #ff4d6d;' +
+        'color:#ff4d6d;padding:10px 20px;text-align:center;' +
+        'font-family:monospace;font-size:13px;backdrop-filter:blur(6px)';
+      warn.textContent = '⚠ Storage unavailable — your progress will not be saved. Are you in private/incognito mode?';
+      // Insert at top of body
+      document.body.insertBefore(warn, document.body.firstChild);
+    }
+  }());
+
   // Expose state globally for event handlers in modules
   window._SHIBI_STATE = s;
 
@@ -151,7 +170,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (id === 'section-resume')    SHIBI.Resume.render(s);
     if (id === 'section-labs')        { if (SHIBI.Labs)    SHIBI.Labs.render(s); }
     if (id === 'section-challenge')   { if (SHIBI.Challenge) SHIBI.Challenge.render(s); }
-    if (id === 'section-home')        { if (SHIBI.Weakness)  SHIBI.Weakness.render(s); }
+    if (id === 'section-home')        { if (SHIBI.Weakness) SHIBI.Weakness.render(s); SHIBI.Home.render(s); }
     if (id === 'section-roadmap')     SHIBI.Roadmap.render(s);
     if (id === 'section-notes')       SHIBI.Notes.render(s);
     if (id === 'section-readiness')   SHIBI.Readiness.render(s);

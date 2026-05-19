@@ -15,13 +15,15 @@ window.SHIBI.Nav = (function () {
   }
 
   function init() {
-    document.querySelectorAll('[data-section]').forEach(function (el) {
-      el.addEventListener('click', function (e) {
-        var id = el.dataset.section;
-        // Call SHIBI.Nav.show so script.js override (re-render hooks) fires on navigation
-        if (id) { e.preventDefault(); SHIBI.Nav.show(id); }
-      });
+    // FIX BUG-01: use event delegation at document level so dynamically-injected
+    // [data-section] elements (e.g. "Setup Now" from renderHomeBanner) also work.
+    document.addEventListener('click', function (e) {
+      var el = e.target.closest('[data-section]');
+      if (!el) return;
+      var id = el.dataset.section;
+      if (id) { e.preventDefault(); SHIBI.Nav.show(id); }
     });
+
     var toggle = document.getElementById('sidebarToggle');
     if (toggle) toggle.addEventListener('click', function () {
       document.getElementById('sidebar').classList.toggle('open');

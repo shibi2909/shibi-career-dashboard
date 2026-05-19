@@ -120,15 +120,27 @@ window.SHIBI.Missions = (function () {
 
     // Timetable path
     if (hasTimetable(s)) {
-      var startDate = s.placement && s.placement.startDate ? new Date(s.placement.startDate + 'T00:00:00') : null;
-      for (var j = 0; j < 7; j++) {
-        var fd = new Date(); fd.setDate(fd.getDate() + j);
-        var fds = fd.toISOString().slice(0, 10);
+      // FIX BUG-B: show the next 7 timetable days starting from today or the
+      // first future day in the timetable (handles the case where today is before start date)
+      var allTimetableDays = Object.keys(s.timetable.days).sort();
+      var todayIso = new Date().toISOString().slice(0, 10);
+      // Find first day >= today, or fallback to first day in timetable
+      var startIdx = 0;
+      for (var di = 0; di < allTimetableDays.length; di++) {
+        if (allTimetableDays[di] >= todayIso) { startIdx = di; break; }
+        if (di === allTimetableDays.length - 1) startIdx = 0; // all past
+      }
+      var shown = 0;
+      for (var j = startIdx; j < allTimetableDays.length && shown < 7; j++, shown++) {
+        var fds = allTimetableDays[j];
         var td = s.timetable.days[fds];
         if (!td) continue;
+        var topicPreview = td.subjects ? Object.values(td.subjects)[0] : null;
+        var preview = topicPreview && topicPreview.length > 0 ? SHIBI.Utils.escapeHtml(topicPreview[0].slice(0, 35) + (topicPreview[0].length > 35 ? '…' : '')) : td.phase;
         html += '<div class="mini-day-card ' + (td.done ? 'done' : '') + '">' +
           '<div class="mini-day-num">Day ' + td.dayIndex + '</div>' +
-          '<div class="mini-day-phase">' + td.phase + '</div>' +
+          '<div class="mini-day-phase">' + SHIBI.Utils.escapeHtml(td.phase) + '</div>' +
+          '<div style="font-size:10px;color:var(--text-dim);margin-top:2px;font-family:var(--font-mono)">' + preview + '</div>' +
           '<div class="mini-day-hours">' + td.estimatedHours + 'h</div>' +
           '</div>';
       }
@@ -236,13 +248,24 @@ window.SHIBI.Missions = (function () {
     var totalD   = SHIBI.Timetable.totalDays(s);
     var remain   = SHIBI.Timetable.daysRemaining(s);
 
+    // FIX BUG-07: when today is outside range, show the nearest valid day instead of
+    // a blank "outside range" message so the user always sees a real daily plan.
     if (!tdayData) {
-      el.innerHTML =
-        '<div class="mission-day-header">' +
-          '<div class="mission-day-number">DAY ' + dayIdx + ' OF ' + totalD + '</div>' +
-          '<p class="text-muted-soft">Today is outside your timetable range.</p>' +
-        '</div>';
-      return;
+      var allKeys = Object.keys(s.timetable.days).sort();
+      if (allKeys.length === 0) {
+        el.innerHTML = '<p class="text-muted-soft p-3">No timetable days found. Re-run Prep Setup.</p>';
+        return;
+      }
+      // Pick first future day, or last past day if all days are past
+      var nearestKey = allKeys[0];
+      for (var ki = 0; ki < allKeys.length; ki++) {
+        if (allKeys[ki] >= tdayKey) { nearestKey = allKeys[ki]; break; }
+        nearestKey = allKeys[ki];
+      }
+      tdayData = s.timetable.days[nearestKey];
+      tdayKey  = nearestKey;
+      // Update the day index label to match the nearest day
+      dayIdx = tdayData.dayIndex;
     }
 
     var isDone = tdayData.done;
@@ -333,6 +356,27 @@ window.SHIBI.Missions = (function () {
 
     // Timetable path
     if (hasTimetable(s)) {
+      // FIX BUG-08: check and auto-adjust for missed days each time section is entered
+      if (window.SHIBI && SHIBI.Timetable && SHIBI.Timetable.shouldAutoAdjust(s)) {
+        var adjustCount = SHIBI.Timetable.adjustForMissedDays(s);
+        if (adjustCount) {
+          var adjBanner = document.getElementById('missionAdjustBanner');
+          if (adjBanner) {
+            adjBanner.style.display = 'flex';
+            adjBanner.innerHTML =
+              '<i class="bi bi-lightning-charge-fill" style="font-size:18px"></i>' +
+              '<div>Timetable auto-adjusted — <strong>' + adjustCount + '</strong> missed topics redistributed across next 7 days.</div>' +
+              '<button class="mini-btn outline ms-auto" id="undoAdjustBtn">Undo</button>';
+            var undoBtn = document.getElementById('undoAdjustBtn');
+            if (undoBtn) undoBtn.addEventListener('click', function () {
+              SHIBI.Timetable.undoAdjustment(s);
+              adjBanner.style.display = 'none';
+              render(s);
+              SHIBI.Utils.toast('Timetable adjustment undone.');
+            });
+          }
+        }
+      }
       renderTimetableTodayCard(s);
       renderNextDaysScroller(s, currentDay);
       renderAccordion(s);

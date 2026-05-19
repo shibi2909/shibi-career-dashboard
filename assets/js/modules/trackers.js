@@ -82,14 +82,24 @@ window.SHIBI.Trackers = (function () {
       li.querySelector('.topic-label').addEventListener('click', function () {
         var arr = s.trackers[key].completed;
         var idx = arr.indexOf(topic);
-        if (idx > -1) arr.splice(idx, 1);
-        else {
+        if (idx > -1) {
+          // FIX BUG-04: uncheck — splice and deduct XP (min 0)
+          arr.splice(idx, 1);
+          s.xp = Math.max(0, (s.xp || 0) - 10);
+          // Recalculate level after XP change
+          var newLvl = 1;
+          while (s.xp >= (newLvl + 1) * 200) newLvl++;
+          s.level = newLvl;
+        } else {
           arr.push(topic);
           SHIBI.Gamify.addXP(s, 10, 'Completed topic: ' + topic);
         }
         SHIBI.State.markStudy(s);
         SHIBI.State.save(s);
         renderAll(s);
+        // FIX BUG-12: update home KPIs (progress %, XP pill, hours bar) after toggle
+        if (window.SHIBI && SHIBI.Home) SHIBI.Home.render(s);
+        SHIBI.Gamify.updateXPPill(s);
         SHIBI.Gamify.checkBadges(s);
       });
 

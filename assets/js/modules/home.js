@@ -55,6 +55,56 @@ window.SHIBI.Home = (function () {
     SHIBI.Planner.renderGoals(s);
     SHIBI.Status.render(s);
     SHIBI.Gamify.updateXPPill(s);
+    // FIX BUG-C: render prep summary strip every time home is shown
+    renderPrepSummary(s);
+  }
+
+  // FIX BUG-C: show prep summary strip on section-home after setup is complete
+  function renderPrepSummary(s) {
+    var strip   = document.getElementById('prepSummaryStrip');
+    var content = document.getElementById('prepSummaryContent');
+    if (!strip || !content) return;
+
+    var p = s.placement || {};
+    if (!p.setupComplete || !p.startDate || !p.endDate) {
+      strip.style.display = 'none';
+      return;
+    }
+    strip.style.display = '';
+
+    function parseD(str) { var pts = str.split('-'); return new Date(+pts[0], +pts[1]-1, +pts[2]); }
+    function fmtD(str) {
+      if (!str) return '—';
+      var d = parseD(str);
+      return d.toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
+    }
+    var today     = new Date(); today.setHours(0,0,0,0);
+    var start     = parseD(p.startDate); start.setHours(0,0,0,0);
+    var end       = parseD(p.endDate);   end.setHours(0,0,0,0);
+    var totalDays = Math.max(1, Math.round((end - start) / 86400000) + 1);
+    var dayIdx    = Math.min(totalDays, Math.max(1, Math.round((today - start) / 86400000) + 1));
+    var remaining = Math.max(0, Math.round((end - today) / 86400000));
+    var pct       = Math.min(100, Math.round((dayIdx / totalDays) * 100));
+    var weakHtml  = (p.weakSubjects || []).map(function (w) {
+      return '<span class="prep-chip">' + SHIBI.Utils.escapeHtml(w) + '</span>';
+    }).join('');
+    var priorityLabels = { placement_focus:'Placement Focus', cybersec_focus:'Cybersec Focus', balanced:'Balanced' };
+    var priorityLabel  = priorityLabels[p.priority || 'balanced'] || 'Balanced';
+    var urgColor = remaining <= 7 ? 'var(--accent-red)' : remaining <= 30 ? 'var(--accent-yellow)' : 'var(--accent)';
+
+    content.innerHTML =
+      '<div class="prep-summary-grid">' +
+        '<div class="prep-summary-item"><div class="prep-val">' + SHIBI.Utils.escapeHtml(fmtD(p.startDate)) + '</div><div class="prep-label">START DATE</div></div>' +
+        '<div class="prep-summary-item"><div class="prep-val">' + SHIBI.Utils.escapeHtml(fmtD(p.endDate)) + '</div><div class="prep-label">END DATE</div></div>' +
+        '<div class="prep-summary-item"><div class="prep-val">' + totalDays + '</div><div class="prep-label">TOTAL DAYS</div></div>' +
+        '<div class="prep-summary-item"><div class="prep-val" style="color:' + urgColor + '">Day ' + dayIdx + ' / ' + totalDays + '</div><div class="prep-label">PROGRESS</div></div>' +
+        '<div class="prep-summary-item"><div class="prep-val" style="color:' + urgColor + '">' + remaining + '</div><div class="prep-label">DAYS LEFT</div></div>' +
+        '<div class="prep-summary-item"><div class="prep-val">' + (p.targetHoursPerDay || 6) + 'h</div><div class="prep-label">DAILY TARGET</div></div>' +
+        '<div class="prep-summary-item"><div class="prep-val" style="font-size:13px">' + SHIBI.Utils.escapeHtml(priorityLabel) + '</div><div class="prep-label">PRIORITY</div></div>' +
+      '</div>' +
+      '<div class="progress-track mt-2" style="height:6px"><div class="progress-fill" style="width:' + pct + '%;background:' + urgColor + '"></div></div>' +
+      (weakHtml ? '<div class="prep-chips mt-2">' + weakHtml + '</div>' : '') +
+      '<p style="font-size:11px;color:var(--text-dim);font-family:var(--font-mono);margin-top:6px">' + pct + '% elapsed</p>';
   }
 
   function initActions(s) {
@@ -178,5 +228,5 @@ window.SHIBI.Home = (function () {
     });
   }
 
-  return { render, initActions, initRepos, startClock, initSearch };
+  return { render, initActions, initRepos, startClock, initSearch, renderPrepSummary };
 })();

@@ -320,12 +320,14 @@ window.SHIBI.PrepSetup = (function () {
           s.placement.weakSubjects = weak2;
           var n = SHIBI.Timetable.generate(s);
           if (n) {
-            SHIBI.Utils.toast('Timetable ready — ' + n + ' days mapped! 🗓️');
+            SHIBI.Utils.toast('✅ Timetable ready — ' + n + ' days mapped! 🗓️');
             renderHomeBanner(s);
             renderDayStrip(s);
-            // Re-render mission section if visible
-            if (window.SHIBI && SHIBI.Missions) SHIBI.Missions.render(s);
-            renderSection(s); // refresh section with success view
+            // FIX BUG-B: navigate to section-mission so user sees the timetable immediately
+            // (without this, user stays on section-prep-setup and never sees the plan)
+            setTimeout(function () {
+              if (window.SHIBI && SHIBI.Nav) SHIBI.Nav.show('section-mission');
+            }, 400); // brief delay so toast is visible first
           }
         });
       }

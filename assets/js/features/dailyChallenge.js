@@ -448,8 +448,12 @@ window.SHIBI.Challenge = (function () {
         '<div style="padding:4px 8px 12px">' + buildTopicBars(s) + '</div>' +
       '</div>';
 
-    // Event delegation for buttons
-    container.addEventListener('click', function handler(e) {
+    // FIX BUG-05: use persistent event delegation (NOT { once:true }) so hint/approach/solve
+    // all work independently. Remove old listener first to avoid duplicates on re-render.
+    if (container._challengeHandler) {
+      container.removeEventListener('click', container._challengeHandler);
+    }
+    container._challengeHandler = function (e) {
       var btn = e.target.closest('[data-action]');
       if (!btn) return;
       var action = btn.dataset.action;
@@ -457,7 +461,8 @@ window.SHIBI.Challenge = (function () {
       if (action === 'solve')    markSolved(s, diff);
       if (action === 'hint')     toggleBlock('hint_' + diff);
       if (action === 'approach') toggleBlock('approach_' + diff);
-    }, { once: true }); // re-attached each render
+    };
+    container.addEventListener('click', container._challengeHandler);
   }
 
   function kpi(val, label, icon, color) {

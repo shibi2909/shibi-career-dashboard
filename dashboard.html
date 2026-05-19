@@ -102,6 +102,17 @@
       <!-- v4: First-run setup banner (shown when setup not complete) -->
       <div class="prep-setup-banner" id="prepSetupBanner" style="display:none"></div>
 
+      <!-- BUG-C FIX: Prep summary strip (shown when setup is complete) -->
+      <div class="panel glass mb-3" id="prepSummaryStrip" style="display:none">
+        <div class="panel-head">
+          <h3><i class="bi bi-calendar2-check"></i> Preparation Plan</h3>
+          <a href="#" class="mini-btn outline" data-section="section-prep-setup">
+            <i class="bi bi-pencil-fill"></i> Edit Setup
+          </a>
+        </div>
+        <div id="prepSummaryContent"></div>
+      </div>
+
       <!-- AI Mentor top suggestion banner (Feature 1) -->
       <div class="mentor-home-banner" id="mentorHomeBanner" style="display:none"></div>
 

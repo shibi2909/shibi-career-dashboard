@@ -4138,3 +4138,88 @@ body[data-content-lang="ml"] .bilingual-block:not([data-lang-override]) .lang-ml
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* === BUG-FIX PASS 2 — ANIMATIONS & POMODORO POPUP (BUG-06/11) === */
+
+/* BUG-06: Pomodoro completion popup */
+.pomo-popup-overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(0,0,0,0.65); backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity 0.3s ease;
+}
+.pomo-popup-overlay.visible { opacity: 1; }
+.pomo-popup-card {
+  text-align: center; padding: 36px 44px; border-radius: 16px;
+  border: 1px solid var(--accent); box-shadow: 0 0 32px var(--accent-glow);
+  transform: scale(0.85); transition: transform 0.3s ease;
+}
+.pomo-popup-overlay.visible .pomo-popup-card { transform: scale(1); }
+.pomo-popup-icon { font-size: 48px; margin-bottom: 12px; }
+.pomo-popup-title { font-family: var(--font-display); color: var(--accent); margin-bottom: 8px; }
+.pomo-popup-xp { color: var(--accent-green); font-family: var(--font-mono); font-size: 15px; margin-bottom: 6px; }
+.pomo-popup-count { color: var(--text-mute); font-family: var(--font-mono); font-size: 13px; margin-bottom: 20px; }
+
+/* BUG-11: XP pill glow flash */
+@keyframes xpGlow {
+  0%,100% { box-shadow: none; }
+  50% { box-shadow: 0 0 14px var(--accent-glow), 0 0 28px var(--accent-glow); }
+}
+.xp-glow { animation: xpGlow 1.1s ease; }
+
+/* BUG-11: Challenge card solved fade */
+.challenge-card { transition: background-color 0.4s ease, border-color 0.4s ease; }
+.challenge-card.solved {
+  background: rgba(0, 255, 120, 0.06) !important;
+  border-color: var(--accent-green) !important;
+}
+
+/* BUG-11: Checkbox toggle smooth transition */
+.check-list li {
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+/* BUG-11: Hint / approach block smooth expand */
+.hint-block, .approach-block {
+  max-height: 0; opacity: 0; overflow: hidden;
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+}
+.hint-block.visible, .approach-block.visible {
+  max-height: 500px; opacity: 1;
+}
+
+/* BUG-11: Progress bar smooth fill */
+.progress-fill { transition: width 0.5s ease; }
+
+/* BUG-11: KPI card hover */
+.kpi-card { transition: transform 0.25s ease, box-shadow 0.25s ease; }
+
+/* BUG-11: Button active press feedback */
+.mini-btn:active { transform: scale(0.97); }
+
+/* === BUG-FIX PASS 3 — Prep Summary Strip + Timetable Mini Cards (BUG-C/B) === */
+
+.prep-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 10px; margin-top: 10px;
+}
+.prep-summary-item {
+  text-align: center; padding: 10px 8px;
+  border: 1px solid var(--border-soft); border-radius: 8px;
+  background: var(--bg-elev);
+}
+.prep-summary-item .prep-val {
+  font-family: var(--font-display); font-size: 20px;
+  font-weight: 700; color: var(--accent);
+}
+.prep-summary-item .prep-label {
+  font-family: var(--font-mono); font-size: 9px;
+  letter-spacing: 1.5px; color: var(--text-mute); margin-top: 2px;
+}
+.prep-chips {
+  display: flex; flex-wrap: wrap; gap: 6px;
+}
+/* timetable mini-day-card topic preview text */
+.mini-day-card { cursor: pointer; transition: transform 0.2s, border-color 0.2s; }
+.mini-day-card:hover { transform: translateY(-2px); border-color: var(--accent); }

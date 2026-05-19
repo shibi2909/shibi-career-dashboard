@@ -265,35 +265,40 @@ window.SHIBI.Timetable = (function () {
         revTasks.forEach(function (t) { tasks.push(t); });
         subjMap.revision = revTasks;
       } else {
-        // Bresenham distribution: each subject contributes its share of tasks
+        // FIX: timetable-render — cycling distribution guarantees every non-light day
+        // gets at least one task per active subject. The old Bresenham approach gave 0
+        // tasks to all subjects on days 1-5 (because allocatedTotal << N), making the
+        // timetable appear blank. Cycling through topics ensures visible daily content.
+
+        // Non-light day index (exclude every 7th day from the position counter)
+        var nonLightN      = N - Math.floor(N / 7);          // approx non-light days total
+        var nonLightSoFar  = i - Math.floor(i / 7);          // non-light days up to today
+
         Object.keys(queues).forEach(function (subj) {
           var allT = queues[subj];
           if (!allT || allT.length === 0) return;
+          var w = weights[subj] || 0;
+          if (w === 0) return;
 
-          // Weighted Bresenham: subject gets floor(N * weight/100) tasks total
-          var allocatedTotal = Math.floor(N * (weights[subj] || 0) / 100);
-          if (allocatedTotal === 0) return;
+          // daysPerTopic: how many non-light days each curriculum item is "active".
+          // High-weight subjects advance slightly faster (have proportionally more sessions).
+          var daysPerTopic = Math.max(1, Math.floor(nonLightN / allT.length));
 
-          var expectedByNow = Math.floor((i + 1) * allocatedTotal / N);
-          var expectedPrev  = Math.floor(i       * allocatedTotal / N);
-          var numToday = expectedByNow - expectedPrev;
+          // Current topic index based on how many non-light days have elapsed
+          var topicIdx = Math.min(allT.length - 1, Math.floor(nonLightSoFar / daysPerTopic));
 
-          for (var ti = 0; ti < numToday; ti++) {
-            var taskIdx = expectedPrev + ti;
-            if (taskIdx < allT.length) {
-              var taskStr = allT[taskIdx];
-              tasks.push(taskStr);
-              if (!subjMap[subj]) subjMap[subj] = [];
-              subjMap[subj].push(taskStr);
-            }
-          }
+          var taskStr = allT[topicIdx];
+          tasks.push(taskStr);
+          if (!subjMap[subj]) subjMap[subj] = [];
+          subjMap[subj].push(taskStr);
         });
 
-        // Fallback: ensure no completely empty day
+        // Safety fallback (fires only if all queues were empty)
         if (tasks.length === 0) {
-          var fill = 'Quick aptitude drill: solve 5 problems from any recent topic';
+          var fill = 'Review today\'s topics and solve 5 practice problems';
           tasks.push(fill);
-          subjMap.aptitude = [fill];
+          if (!subjMap.aptitude) subjMap.aptitude = [];
+          subjMap.aptitude.push(fill);
         }
       }
 

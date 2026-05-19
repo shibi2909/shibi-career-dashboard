@@ -289,9 +289,22 @@ window.SHIBI.State = (function () {
       }
       s.lastActiveDate = today;
     }
-    // bump daily activity
+    // FIX: heatmap-wiring — ensure dailyActivity[today] reflects actual progress.
+    // Previously markStudy() only created a zero-filled entry and never updated
+    // the real values, so the heatmap always showed empty cells (score = 0).
     if (!s.dailyActivity) s.dailyActivity = {};
-    if (!s.dailyActivity[today]) s.dailyActivity[today] = { hours: 0, problemsSolved: 0, tasksDone: 0, score: 0 };
+    if (!s.dailyActivity[today]) {
+      s.dailyActivity[today] = { hours: 0, problemsSolved: 0, tasksDone: 0, score: 0 };
+    }
+    // Sync live values from state so the heatmap reads real activity
+    s.dailyActivity[today].hours          = +(s.hoursToday || 0);
+    s.dailyActivity[today].problemsSolved = +(s.dsaToday   || 0);
+    s.dailyActivity[today].tasksDone      = (s.tasks || []).filter(function (t) { return t.done; }).length;
+    // Composite score used by heatmap intensity() function
+    s.dailyActivity[today].score =
+      (s.dailyActivity[today].hours          * 10) +
+      (s.dailyActivity[today].problemsSolved *  5) +
+      (s.dailyActivity[today].tasksDone      *  3);
     return s;
   }
 
